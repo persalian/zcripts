@@ -1,5 +1,5 @@
 import unittest
-import kvm_stat
+import kvm_list
 
 
 mock_list = {
@@ -18,7 +18,7 @@ mock_list = {
 class Test_VM(unittest.TestCase):
 
     def test_kvm_list(self):
-        vm_list = kvm_stat.kvm_list(mock_list["in_data"].split("\n"))
+        vm_list = kvm_list.kvm_list(mock_list["in_data"].split("\n"))
         self.assertListEqual(vm_list, mock_list["out_data"], "список VM определен неправильно")
 
 
