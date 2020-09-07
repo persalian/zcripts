@@ -4,10 +4,6 @@ import get_request
 import datetime
 import qparam
 
-cmds = {
-    'info': 'echo  | openssl s_client -showcerts -connect {1}:443 -servername cloud3.osnova-sib.ru 2>/dev/null  | openssl x509  -text -noout  | grep Not'
-}
-
 
 def valid_period(cert_info):
     r = {}
@@ -34,18 +30,18 @@ if __name__ == '__main__':
     }
 
     param = qparam.LParam()
-    param.register('-host', def_value='localhost:443', help_msg='hostname of hesting host, with define port')
-    param.register('-valid-period', def_value=False, help_msg='Show a period when certificate is valid')
-    param.register('-rest-of-days', def_value=False, help_msg='Show days before certificate\'ll became invalid')
+    param.register('--host', def_value='localhost:443', help_msg='hostname of hesting host, with define port')
+    param.register('--valid-period', def_value=False, help_msg='Show a period when certificate is valid')
+    param.register('--rest-of-days', def_value=False, help_msg='Show days before certificate\'ll became invalid')
     param.load_param()
 
-    host = param.param('host')
+    host = param.param('host') + ":443"
 
     cmd = cmds['info'].format(host)
     res = get_request.execute_cmd(cmd)
     del res[-1]
     vperiod = valid_period(res)
-    if param.param('valid_period'):
+    if param.param('valid-period'):
         print("from: {} and to: {}".format(vperiod['start'], vperiod['end']))
 
     days = rest_of_days(datetime.datetime.now().date(), res)
