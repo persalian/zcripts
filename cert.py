@@ -3,6 +3,7 @@
 import get_request
 import datetime
 import qparam
+import json
 
 
 def valid_period(cert_info):
@@ -23,27 +24,32 @@ def rest_of_days(now, cert_info):
         return days
     return None
 
+def json_processor(o):
+    if isinstance(o, datetime.date):
+        return o.isoformat()
+
 if __name__ == '__main__':
 
     cmds = {
-        'info': 'echo  | openssl s_client -showcerts -connect {} -servername cloud3.osnova-sib.ru 2>/dev/null  | openssl x509  -text -noout  | grep Not'
+        'info': 'echo  | openssl s_client -showcerts -connect {}:443 -servername cloud3.osnova-sib.ru 2>/dev/null  | openssl x509  -text -noout  | grep Not'
     }
 
     param = qparam.LParam()
-    param.register('--host', def_value='localhost:443', help_msg='hostname of hesting host, with define port')
-    param.register('--valid-period', def_value=False, help_msg='Show a period when certificate is valid')
-    param.register('--rest-of-days', def_value=False, help_msg='Show days before certificate\'ll became invalid')
+    param.register('host', def_value='localhost:443', help_msg='hostname of hesting host, with define port')
+    param.register('valid-period', def_value=False, help_msg='Show a period when certificate is valid')
+    param.register('rest-of-days', def_value=False, help_msg='Show days before certificate\'ll became invalid')
     param.load_param()
 
-    host = param.param('host') + ":443"
-
-    cmd = cmds['info'].format(host)
+    cmd = cmds['info'].format(param.param('host'))
     res = get_request.execute_cmd(cmd)
     del res[-1]
-    vperiod = valid_period(res)
-    if param.param('valid-period'):
-        print("from: {} and to: {}".format(vperiod['start'], vperiod['end']))
 
-    days = rest_of_days(datetime.datetime.now().date(), res)
+    if param.param('valid-period'):
+        vperiod = valid_period(res)
+        j = json.dumps(vperiod, default=json_processor)
+        print(j)
+
     if param.param('rest-of-days'):
-        print("days to end: {}".format(days))
+        days = {'days': rest_of_days(datetime.datetime.now().date(), res)}
+        j = json.dumps(days)
+        print(j)
